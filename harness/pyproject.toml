@@ -1,0 +1,17 @@
+[project]
+name = "mini-harness"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "litellm>=1.50.0",
+]
+
+[project.scripts]
+mini-harness = "mini_harness.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mini_harness"]

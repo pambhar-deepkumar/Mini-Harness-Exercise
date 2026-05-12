@@ -1,0 +1,36 @@
+# Mini-Harness model registry.
+#
+# Every entry is forwarded to litellm.completion(model=..., api_base=..., api_key=...).
+# LiteLLM lets us talk to many providers with one API; the `model` string's
+# prefix selects the provider:
+#   litellm_proxy/<name>  -> a self-hosted LiteLLM proxy
+#   anthropic/<name>      -> Anthropic API directly
+#   openai/<name>         -> OpenAI API directly
+#   gemini/<name>         -> Google Gemini API directly
+#
+# Pick a model with `--model <alias>` or by setting MINI_HARNESS_MODEL.
+# The matching API key must be in `api_key_env`.
+
+default = "gemini"
+
+# --- Direct provider access (use the provider's own API key) ----------------
+[models.qwen]
+model = "litellm_proxy/qwen.qwen3-235b-a22b-2507"
+api_base = "https://llm-proxy.seai.cit.tum.de"
+api_key_env = "LITELLM_API_KEY"
+max_tokens = 8000
+
+[models.claude]
+model = "anthropic/claude-sonnet-4-6"
+api_key_env = "ANTHROPIC_API_KEY"
+max_tokens = 16000
+
+[models.gpt]
+model = "openai/gpt-5.4"
+api_key_env = "OPENAI_API_KEY"
+max_tokens = 8000
+
+[models.gemini]
+model = "gemini/gemini-2.5-flash"
+api_key_env = "GEMINI_API_KEY"
+max_tokens = 8000
