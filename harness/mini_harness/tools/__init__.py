@@ -1,5 +1,5 @@
 from ..sandbox import Sandbox
-from . import bash_tools, file_tools
+from . import bash_tools, file_tools, plan_tools
 
 # OpenAI-style tool schemas. LiteLLM accepts this format for every provider
 # (Anthropic, OpenAI, Gemini, ...) and translates internally where needed.
@@ -90,10 +90,75 @@ TOOL_SCHEMAS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "grep_files",
+            "description": (
+                "Search recursively for a text pattern across files in the workspace "
+                "using grep. Returns matching lines in the format file:line:match. "
+                "Use this to find TODOs, function definitions, string occurrences, etc. "
+                "without running a shell command."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "pattern": {
+                        "type": "string",
+                        "description": "Regular expression or literal string to search for.",
+                    },
+                    "path": {
+                        "type": "string",
+                        "description": (
+                            "Directory or file path relative to /workspace to search in. "
+                            "Use '.' to search the entire workspace."
+                        ),
+                    },
+                },
+                "required": ["pattern", "path"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "update_plan",
+            "description": (
+                "Store or update the agent's current plan as a list of tasks. "
+                "Call this early in a multi-step task to outline what you intend to do, "
+                "then call it again as steps are completed to flip the 'done' flag. "
+                "The plan is injected into the system prompt on every subsequent turn."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "description": "Ordered list of plan steps.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "task": {
+                                    "type": "string",
+                                    "description": "Short description of the step.",
+                                },
+                                "done": {
+                                    "type": "boolean",
+                                    "description": "True if the step has been completed.",
+                                },
+                            },
+                            "required": ["task"],
+                        },
+                    },
+                },
+                "required": ["items"],
+            },
+        },
+    },
 ]
 
 
-def dispatch(name: str, tool_input: dict, sandbox: Sandbox) -> str:
+def dispatch(name: str, tool_input: dict, sandbox: Sandbox, state: dict | None = None) -> str:
     if name == "list_files":
         return file_tools.list_files(tool_input["path"], sandbox)
 
@@ -110,5 +175,11 @@ def dispatch(name: str, tool_input: dict, sandbox: Sandbox) -> str:
 
     if name == "run_bash":
         return bash_tools.run_bash(tool_input["command"], sandbox)
+
+    if name == "grep_files":
+        return bash_tools.grep_files(tool_input["pattern"], tool_input["path"], sandbox)
+
+    if name == "update_plan":
+        return plan_tools.update_plan(tool_input["items"], state if state is not None else {})
 
     return f"Unknown tool: {name}"
