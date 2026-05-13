@@ -2,7 +2,7 @@ import shlex
 import subprocess
 from pathlib import Path
 
-IMAGE_TAG = "mini-harness:latest"
+IMAGE_TAG = "mini-harness:py312"
 DOCKERFILE_DIR = Path(__file__).resolve().parent.parent / "container"
 
 
